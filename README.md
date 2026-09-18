@@ -48,3 +48,46 @@ Abra http://127.0.0.1:8000/docs e teste, nesta ordem:
 
 Como entregar
 ao clonar o repo, subam para o próprio github, mesmo feito em equipe cada membro sobe em sue github e o link do github no teams
+
+---
+
+## Login module (implementation notes, in English)
+
+The login module follows the exact same layered shape as the `produtos` module
+(`main.py -> routes -> controller -> model -> data`):
+
+| File | What it is |
+| --- | --- |
+| `app/data/usuarios_mock.py` | Mocked users (provided, untouched) |
+| `app/models/usuario.py` | `Usuario` base class plus `Visitante`, `Contribuidor` and `Moderador` subclasses, and `carregar_usuarios()` |
+| `app/controllers/usuario_controller.py` | `UsuarioController`, exposing `login(nome, senha)` |
+| `app/routes/usuario_routes.py` | `POST /api/login` |
+
+Each of the three mocked profiles becomes an instance of a different class, chained
+by inheritance: `Visitante -> Contribuidor -> Moderador`, where each subclass extends
+the permission list of the one above it via `super().mostrar_permissoes()`. See
+[`PARTE_B.md`](PARTE_B.md) for the full write-up on where encapsulation and
+inheritance are applied across KiOferta.
+
+### Running locally
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+Open `http://127.0.0.1:8000/docs` and try `POST /api/login` with, for example:
+
+```json
+{"nome": "caio", "senha": "caio123"}
+```
+
+which returns:
+
+```json
+{"id": 3, "nome": "caio", "perfil": "moderador", "permissoes": ["ver_ofertas", "cadastrar_oferta", "remover_oferta", "banir_usuario"]}
+```
+
+A wrong name or password returns `401 Unauthorized`.
