@@ -51,25 +51,25 @@ ao clonar o repo, subam para o próprio github, mesmo feito em equipe cada membr
 
 ---
 
-## Login module (implementation notes, in English)
+## Módulo de login (notas de implementação)
 
-The login module follows the exact same layered shape as the `produtos` module
+O módulo de login segue exatamente a mesma estrutura em camadas do módulo `produtos`
 (`main.py -> routes -> controller -> model -> data`):
 
-| File | What it is |
+| Arquivo | O que é |
 | --- | --- |
-| `app/data/usuarios_mock.py` | Mocked users (provided, untouched) |
-| `app/models/usuario.py` | `Usuario` base class plus `Visitante`, `Contribuidor` and `Moderador` subclasses, and `carregar_usuarios()` |
-| `app/controllers/usuario_controller.py` | `UsuarioController`, exposing `login(nome, senha)` |
-| `app/routes/usuario_routes.py` | `POST /api/login` |
+| `app/data/usuarios_mock.py` | Usuários mockados (fornecido, não alterado) |
+| `app/models/usuario.py` | Classe base `Usuario` e as subclasses `Visitante`, `Contribuidor` e `Moderador`, além da função `carregar_usuarios()` |
+| `app/controllers/usuario_controller.py` | `UsuarioController`, expondo `login(nome, senha)` |
+| `app/routes/usuario_routes.py` | Rota `POST /api/login` |
 
-Each of the three mocked profiles becomes an instance of a different class, chained
-by inheritance: `Visitante -> Contribuidor -> Moderador`, where each subclass extends
-the permission list of the one above it via `super().mostrar_permissoes()`. See
-[`PARTE_B.md`](PARTE_B.md) for the full write-up on where encapsulation and
-inheritance are applied across KiOferta.
+Cada um dos três perfis mockados vira uma instância de uma classe diferente,
+encadeadas por herança: `Visitante -> Contribuidor -> Moderador`, em que cada
+subclasse estende a lista de permissões da classe anterior via
+`super().mostrar_permissoes()`. Veja [`PARTE_B.md`](PARTE_B.md) para o texto
+completo sobre onde encapsulamento e herança foram aplicados no KiOferta.
 
-### Running locally
+### Como rodar localmente
 
 ```bash
 python3 -m venv .venv
@@ -78,16 +78,16 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-Open `http://127.0.0.1:8000/docs` and try `POST /api/login` with, for example:
+Abra `http://127.0.0.1:8000/docs` e teste `POST /api/login` com, por exemplo:
 
 ```json
 {"nome": "caio", "senha": "caio123"}
 ```
 
-which returns:
+que retorna:
 
 ```json
 {"id": 3, "nome": "caio", "perfil": "moderador", "permissoes": ["ver_ofertas", "cadastrar_oferta", "remover_oferta", "banir_usuario"]}
 ```
 
-A wrong name or password returns `401 Unauthorized`.
+Nome ou senha incorretos retornam `401 Unauthorized`.

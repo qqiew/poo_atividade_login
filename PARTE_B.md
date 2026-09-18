@@ -1,56 +1,57 @@
-# Part B — Encapsulation and Inheritance in KiOferta
+# Parte B — Encapsulamento e Herança no KiOferta
 
-Ten-minute presentation notes: where the team applied encapsulation and inheritance
-across the KiOferta backend.
+Roteiro para a apresentação de dez minutos: onde a equipe aplicou encapsulamento
+e herança no backend do KiOferta.
 
-## Encapsulation
+## Encapsulamento
 
-Every model in the project keeps its state in "protected" attributes (the `_name`
-convention) and exposes it only through `mostrar_*` (getter) and `alterar_*` (setter)
-methods that validate input before touching the attribute:
+Todas as models do projeto guardam seu estado em atributos "protegidos" (convenção
+`_nome`) e só os expõem por meio de métodos `mostrar_*` (getter) e `alterar_*`
+(setter), que validam a entrada antes de alterar o atributo:
 
-- `Produto` (`app/models/produto.py`) — `alterar_nome` rejects an empty name,
-  `alterar_preco` rejects a negative price. Nothing outside the class ever writes to
-  `_nome` or `_preco` directly.
-- `Mercado` (`app/models/mercado.py`) — `alterar_localizacao` validates that latitude
-  and longitude are within valid ranges before storing them.
-- `Oferta` (`app/models/oferta.py`) — `alterar_preco` enforces that a deal price must
-  be positive and strictly lower than the product's normal price.
-- `Usuario` (`app/models/usuario.py`, the login module) — the password is stored in
-  `_senha` and is never exposed through a getter; the only way to check it is the
-  `verificar_senha()` method, which returns a boolean instead of the raw value.
+- `Produto` (`app/models/produto.py`) — `alterar_nome` rejeita nome vazio,
+  `alterar_preco` rejeita preço negativo. Nada fora da classe escreve diretamente
+  em `_nome` ou `_preco`.
+- `Mercado` (`app/models/mercado.py`) — `alterar_localizacao` valida se latitude
+  e longitude estão dentro dos intervalos válidos antes de armazená-las.
+- `Oferta` (`app/models/oferta.py`) — `alterar_preco` garante que o preço da oferta
+  seja maior que zero e estritamente menor que o preço normal do produto.
+- `Usuario` (`app/models/usuario.py`, módulo de login) — a senha fica em `_senha`
+  e nunca é exposta por um getter; a única forma de conferi-la é o método
+  `verificar_senha()`, que devolve um booleano em vez do valor bruto.
 
-In every case the controller and the routes only ever call these public methods —
-they never read or write the underscore-prefixed attributes, so the internal
-representation of each model can change without breaking the rest of the app.
+Em todos os casos, o controller e as rotas só chamam esses métodos públicos —
+nunca leem nem escrevem diretamente os atributos com underscore. Assim, a
+representação interna de cada model pode mudar sem quebrar o resto da aplicação.
 
-## Inheritance
+## Herança
 
-The login module is the clearest example: three profiles from the mock data become
-three different classes, all inheriting from a common `Usuario` base class
+O módulo de login é o exemplo mais claro: os três perfis do mock viram três
+classes diferentes, todas herdando de uma classe base `Usuario`
 (`app/models/usuario.py`):
 
 ```
 Usuario
  └── Visitante      -> mostrar_permissoes(): ['ver_ofertas']
-      └── Contribuidor  -> adds 'cadastrar_oferta'
-           └── Moderador -> adds 'remover_oferta', 'banir_usuario'
+      └── Contribuidor  -> soma 'cadastrar_oferta'
+           └── Moderador -> soma 'remover_oferta', 'banir_usuario'
 ```
 
-- `Usuario` implements everything the three profiles share: id/name handling,
-  password verification, and a default (empty) permission list.
-- Each subclass overrides only `mostrar_permissoes()` and calls
-  `super().mostrar_permissoes()` to extend the list it inherited, instead of
-  repeating it. A `Moderador` is a `Contribuidor` that is also a `Visitante` — the
-  hierarchy mirrors how the permissions actually build up.
-- The profile string coming from the mock data (`'visitante'`, `'contribuidor'`,
-  `'moderador'`) is turned into the right class through the `PERFIS` dictionary in
-  `carregar_usuarios()`. That is the only place that ever looks at the profile as
-  text — once the `Usuario` subclass is built, `UsuarioController.login()` calls the
-  same `mostrar_perfil()` / `mostrar_permissoes()` methods on every object without
-  knowing or caring which subclass it actually got. That is polymorphism enabled by
-  the inheritance above.
+- `Usuario` implementa tudo o que os três perfis têm em comum: id/nome,
+  verificação de senha e uma lista de permissões padrão (vazia).
+- Cada subclasse sobrescreve apenas `mostrar_permissoes()` e chama
+  `super().mostrar_permissoes()` para estender a lista herdada, em vez de
+  repeti-la. Um `Moderador` é um `Contribuidor`, que por sua vez é um
+  `Visitante` — a hierarquia reflete como as permissões realmente se acumulam.
+- O texto do perfil vindo do mock (`'visitante'`, `'contribuidor'`,
+  `'moderador'`) é transformado na classe certa através do dicionário `PERFIS`
+  em `carregar_usuarios()`. Esse é o único lugar que ainda olha o perfil como
+  texto — depois que o objeto `Usuario` é criado, `UsuarioController.login()`
+  chama os mesmos métodos `mostrar_perfil()` / `mostrar_permissoes()` em
+  qualquer um deles, sem saber nem se importar com qual subclasse recebeu.
+  Isso é o polimorfismo que a herança acima permite.
 
-The same shape (a mock file, a model with `carregar_*`, a controller, and a router)
-is reused for both `produtos` and the new `login` module, which is also a form of
-consistent design applied across the codebase.
+A mesma estrutura (um arquivo de mock, uma model com `carregar_*`, um
+controller e um router) é reaproveitada tanto no módulo `produtos` quanto no
+novo módulo `login`, o que também é uma forma de design consistente aplicado
+em todo o projeto.
