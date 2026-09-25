@@ -1,0 +1,63 @@
+KiOferta API - comandos curl (sucesso e erro)
+Suba a API antes de testar: uvicorn main:app --reload
+Base URL: http://localhost:8000
+
+
+=== RAIZ ===
+
+# GET / - Sucesso (200)
+curl -i http://localhost:8000/
+
+
+=== LOGIN (POST /api/login) ===
+
+# Sucesso (200) - visitante
+curl -i -X POST http://localhost:8000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"nome":"bia","senha":"bia123"}'
+
+# Sucesso (200) - contribuidor
+curl -i -X POST http://localhost:8000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"nome":"ana","senha":"ana123"}'
+
+# Sucesso (200) - moderador
+curl -i -X POST http://localhost:8000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"nome":"caio","senha":"caio123"}'
+
+# Erro 401 - senha inválida
+curl -i -X POST http://localhost:8000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"nome":"bia","senha":"senha_errada"}'
+
+# Erro 401 - usuário inexistente
+curl -i -X POST http://localhost:8000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"nome":"usuario_fantasma","senha":"qualquer123"}'
+
+# Erro 422 - campo obrigatório ausente (falta "senha")
+curl -i -X POST http://localhost:8000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"nome":"bia"}'
+
+
+=== PRODUTOS ===
+
+# GET /api/produtos - Sucesso (200) - listar todos
+curl -i http://localhost:8000/api/produtos
+
+# GET /api/produtos/categoria/{categoria} - Sucesso (200)
+curl -i --get "http://localhost:8000/api/produtos/categoria/Gr%C3%A3os"
+
+# GET /api/produtos/categoria/{categoria} - Erro 404 - categoria inexistente
+curl -i http://localhost:8000/api/produtos/categoria/Bebidas
+
+# GET /api/produtos/{id} - Sucesso (200)
+curl -i http://localhost:8000/api/produtos/1
+
+# GET /api/produtos/{id} - Erro 404 - id inexistente
+curl -i http://localhost:8000/api/produtos/999
+
+# GET /api/produtos/{id} - Erro 422 - id não numérico
+curl -i http://localhost:8000/api/produtos/abc
